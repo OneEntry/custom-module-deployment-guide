@@ -1,0 +1,19 @@
+ARG  TAG=latest
+
+FROM node:${TAG} as builder
+
+WORKDIR /usr/src/app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+
+
+FROM node:${TAG}
+
+WORKDIR /opt/cms-user-app
+COPY package*.json ./
+COPY --from=builder /usr/src/app/dist ./dist/
+COPY --from=builder /usr/src/app/node_modules/ ./node_modules/
+
+ENTRYPOINT ${CHANGE_ME}

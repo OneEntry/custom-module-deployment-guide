@@ -1,0 +1,31 @@
+
+stages:
+  - build
+
+default:
+  tags:
+  - ${CHANGE_ME}
+
+variables:
+  IMG: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_TLS_CERTDIR: ""  
+
+.prod:
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^prod-v.*$/'
+      when: on_success 
+
+build:
+  extends:
+   - .prod
+  stage: build
+  image: docker:27.3.1
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
+  services:
+    - docker:27.3.1-dind
+  script:
+    - docker build --build-arg TAG=$CHANGE_ME -t ${IMG}  -f .docker/Dockerfile .
+    - docker push ${IMG}
+
